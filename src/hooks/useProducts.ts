@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export interface Product {
   id: string;
@@ -10,12 +11,14 @@ export interface Product {
   image_url: string | null;
   in_stock: boolean | null;
   created_at: string;
+  client_id: string | null;
 }
 
-export type ProductInput = Omit<Product, "id" | "created_at">;
+export type ProductInput = Omit<Product, "id" | "created_at" | "client_id">;
 
 export function useProducts() {
   const queryClient = useQueryClient();
+  const { clientId } = useAuthContext();
 
   const productsQuery = useQuery({
     queryKey: ["products"],
@@ -32,7 +35,10 @@ export function useProducts() {
 
   const addProduct = useMutation({
     mutationFn: async (product: ProductInput) => {
-      const { error } = await supabase.from("products").insert(product);
+      const { error } = await supabase.from("products").insert({
+        ...product,
+        client_id: clientId,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export interface BotSettings {
   id: string;
@@ -9,10 +10,12 @@ export interface BotSettings {
   ai_personality: string | null;
   business_hours_start: string | null;
   business_hours_end: string | null;
+  client_id: string | null;
 }
 
 export function useBotSettings() {
   const queryClient = useQueryClient();
+  const { user, clientId } = useAuthContext();
 
   const settingsQuery = useQuery({
     queryKey: ["bot-settings"],
@@ -37,7 +40,8 @@ export function useBotSettings() {
         const { error } = await supabase
           .from("bot_settings")
           .insert({ 
-            user_id: crypto.randomUUID(), // Placeholder user ID
+            user_id: user?.id || crypto.randomUUID(),
+            client_id: clientId,
             ...updates 
           });
         if (error) throw error;
@@ -74,7 +78,8 @@ export function useBotSettings() {
         const { error } = await supabase
           .from("bot_settings")
           .insert({ 
-            user_id: crypto.randomUUID(),
+            user_id: user?.id || crypto.randomUUID(),
+            client_id: clientId,
             bot_active: active 
           });
         if (error) throw error;

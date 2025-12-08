@@ -20,6 +20,7 @@ export type Database = {
           bot_active: boolean | null
           business_hours_end: string | null
           business_hours_start: string | null
+          client_id: string | null
           id: string
           user_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           bot_active?: boolean | null
           business_hours_end?: string | null
           business_hours_start?: string | null
+          client_id?: string | null
           id?: string
           user_id: string
         }
@@ -36,8 +38,27 @@ export type Database = {
           bot_active?: boolean | null
           business_hours_end?: string | null
           business_hours_start?: string | null
+          client_id?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
         }
         Relationships: []
       }
@@ -91,6 +112,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          client_id: string | null
           created_at: string
           id: string
           last_contact_at: string | null
@@ -100,6 +122,7 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           id?: string
           last_contact_at?: string | null
@@ -109,6 +132,7 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           id?: string
           last_contact_at?: string | null
@@ -121,6 +145,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          client_id: string | null
           contact_name: string | null
           contact_phone: string
           content: string | null
@@ -130,6 +155,7 @@ export type Database = {
           message_type: string | null
         }
         Insert: {
+          client_id?: string | null
           contact_name?: string | null
           contact_phone: string
           content?: string | null
@@ -139,6 +165,7 @@ export type Database = {
           message_type?: string | null
         }
         Update: {
+          client_id?: string | null
           contact_name?: string | null
           contact_phone?: string
           content?: string | null
@@ -169,6 +196,7 @@ export type Database = {
       }
       products: {
         Row: {
+          client_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -178,6 +206,7 @@ export type Database = {
           price: number | null
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -187,6 +216,7 @@ export type Database = {
           price?: number | null
         }
         Update: {
+          client_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -197,11 +227,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_my_client_id: { Args: never; Returns: string }
       hybrid_search: {
         Args: {
           full_text_weight?: number
