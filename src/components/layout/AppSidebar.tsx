@@ -7,7 +7,8 @@ import {
   Bot,
   X,
   LogOut,
-  Loader2
+  Loader2,
+  ShoppingCart
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "لوحة التحكم" },
   { to: "/inbox", icon: MessageSquare, label: "صندوق الوارد" },
   { to: "/leads", icon: Users, label: "تصنيف العملاء" },
+  { to: "/orders", icon: ShoppingCart, label: "إدارة الطلبات" },
   { to: "/products", icon: Package, label: "قاعدة المعرفة" },
   { to: "/settings", icon: Settings, label: "إعدادات البوت" },
 ];
