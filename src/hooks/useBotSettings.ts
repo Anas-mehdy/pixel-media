@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -30,6 +31,29 @@ export function useBotSettings() {
       return data;
     },
   });
+
+  // Supabase Realtime subscription for bot_settings
+  useEffect(() => {
+    const channel = supabase
+      .channel("bot-settings-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bot_settings",
+        },
+        (payload) => {
+          // Invalidate and refetch bot-settings when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["bot-settings"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const updateSettings = useMutation({
     mutationFn: async (updates: Partial<BotSettings>) => {
@@ -94,7 +118,7 @@ export function useBotSettings() {
     onSuccess: (_, active) => {
       queryClient.invalidateQueries({ queryKey: ["bot-settings"] });
       toast({
-        title: active ? "البوت نشط" : "البوت متوقف",
+        title: active ? "البوت نشط 🟢" : "البوت متوقف 🛑",
         description: active 
           ? "سيبدأ البوت بالرد على الرسائل تلقائياً"
           : "تم إيقاف الردود التلقائية",
