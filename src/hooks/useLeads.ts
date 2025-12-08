@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 export interface Lead {
   id: string;
@@ -9,12 +10,13 @@ export interface Lead {
   phone: string;
   status: string | null;
   notes: string | null;
+  ai_summary: string | null;
   last_contact_at: string | null;
   created_at: string;
   client_id: string | null;
 }
 
-export type LeadInput = Omit<Lead, "id" | "created_at" | "client_id">;
+export type LeadInput = Omit<Lead, "id" | "created_at" | "client_id" | "ai_summary">;
 
 export function useLeads() {
   const queryClient = useQueryClient();
@@ -26,12 +28,34 @@ export function useLeads() {
       const { data, error } = await supabase
         .from("leads")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("last_contact_at", { ascending: false, nullsFirst: false });
       
       if (error) throw error;
       return data || [];
     },
   });
+
+  // Real-time subscription for leads updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("leads-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "leads",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["leads"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const addLead = useMutation({
     mutationFn: async (lead: LeadInput) => {
@@ -71,7 +95,7 @@ export function useLeads() {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       toast({
         title: "تم التحديث",
-        description: "تم تحديث بيانات العميل بنجاح",
+        description: "تم تحديث تصنيف العميل بنجاح",
       });
     },
     onError: () => {
@@ -90,5 +114,6 @@ export function useLeads() {
     updateLead: updateLead.mutate,
     isAdding: addLead.isPending,
     isUpdating: updateLead.isPending,
+    refetch: leadsQuery.refetch,
   };
 }

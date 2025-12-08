@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, Edit2, Phone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -15,15 +14,16 @@ import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
 const statusOptions = [
-  { value: "new", label: "جديد", variant: "default" as const },
-  { value: "contacted", label: "تم التواصل", variant: "secondary" as const },
-  { value: "qualified", label: "مؤهل", variant: "default" as const },
-  { value: "converted", label: "تم التحويل", variant: "default" as const },
-  { value: "lost", label: "مفقود", variant: "destructive" as const },
+  { value: "new", label: "جديد", color: "bg-gray-500" },
+  { value: "inquiry", label: "استفسار", color: "bg-blue-500" },
+  { value: "potential", label: "مهتم/محتمل", color: "bg-yellow-500" },
+  { value: "order_placed", label: "طلب نشط", color: "bg-purple-500" },
+  { value: "complaint", label: "شكوى", color: "bg-red-500" },
+  { value: "closed", label: "مكتمل", color: "bg-green-500" },
 ];
 
 export default function Leads() {
-  const { leads, isLoading, updateLead, isUpdating } = useLeads();
+  const { leads, isLoading, updateLead, isUpdating, refetch } = useLeads();
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState({ status: "", notes: "" });
 
@@ -43,7 +43,11 @@ export default function Leads() {
 
   const getStatusBadge = (status: string | null) => {
     const statusInfo = statusOptions.find(s => s.value === status) || statusOptions[0];
-    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
+    return (
+      <Badge className={`${statusInfo.color} text-white hover:${statusInfo.color}`}>
+        {statusInfo.label}
+      </Badge>
+    );
   };
 
   if (isLoading) {
@@ -52,7 +56,7 @@ export default function Leads() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            العملاء المحتملين
+            تصنيف العملاء
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -72,7 +76,7 @@ export default function Leads() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            العملاء المحتملين
+            تصنيف العملاء
             <Badge variant="secondary" className="mr-2">{leads.length}</Badge>
           </CardTitle>
         </CardHeader>
@@ -87,23 +91,23 @@ export default function Leads() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>الاسم</TableHead>
-                    <TableHead>رقم الهاتف</TableHead>
+                    <TableHead>الاسم / الهاتف</TableHead>
                     <TableHead>الحالة</TableHead>
                     <TableHead>آخر تواصل</TableHead>
+                    <TableHead>ملخص AI</TableHead>
                     <TableHead className="w-[100px]">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {leads.map((lead) => (
                     <TableRow key={lead.id}>
-                      <TableCell className="font-medium">
-                        {lead.name || "غير محدد"}
-                      </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          {lead.phone}
+                        <div>
+                          <p className="font-medium">{lead.name || "غير محدد"}</p>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Phone className="w-3 h-3" />
+                            <span dir="ltr">{lead.phone}</span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(lead.status)}</TableCell>
@@ -114,6 +118,11 @@ export default function Leads() {
                               locale: ar,
                             })
                           : "لم يتم التواصل"}
+                      </TableCell>
+                      <TableCell className="max-w-[200px]">
+                        <p className="text-sm text-muted-foreground truncate">
+                          {lead.ai_summary || "-"}
+                        </p>
                       </TableCell>
                       <TableCell>
                         <Button
@@ -137,7 +146,7 @@ export default function Leads() {
       <Dialog open={!!editingLead} onOpenChange={() => setEditingLead(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>تعديل بيانات العميل</DialogTitle>
+            <DialogTitle>تعديل تصنيف العميل</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -152,7 +161,10 @@ export default function Leads() {
                 <SelectContent>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${option.color}`} />
+                        {option.label}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -23,7 +23,7 @@ interface AppSidebarProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "لوحة التحكم" },
   { to: "/inbox", icon: MessageSquare, label: "صندوق الوارد" },
-  { to: "/leads", icon: Users, label: "العملاء المحتملين" },
+  { to: "/leads", icon: Users, label: "تصنيف العملاء" },
   { to: "/products", icon: Package, label: "قاعدة المعرفة" },
   { to: "/settings", icon: Settings, label: "إعدادات البوت" },
 ];
