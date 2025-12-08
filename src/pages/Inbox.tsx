@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, Send, MessageSquare, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,32 @@ export default function Inbox() {
     selectedContact, 
     setSelectedContact,
     isLoadingContacts,
-    isLoadingMessages 
+    isLoadingMessages,
+    sendMessage,
+    isSending,
   } = useInbox();
   const [messageInput, setMessageInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedContactInfo = contacts.find(c => c.phone === selectedContact);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!messageInput.trim() || isSending) return;
+    sendMessage(messageInput);
+    setMessageInput("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-4">
@@ -142,21 +163,21 @@ export default function Inbox() {
                       key={msg.id}
                       className={cn(
                         "flex",
-                        msg.is_from_bot ? "justify-start" : "justify-end"
+                        // Bot messages (AI Agent) on the right, Customer messages on the left
+                        msg.is_from_bot ? "justify-end" : "justify-start"
                       )}
                     >
                       <div
                         className={cn(
                           "max-w-[75%] px-4 py-2 rounded-2xl",
                           msg.is_from_bot
-                            ? "bg-chat-bot text-chat-bot-foreground rounded-tr-md"
-                            : "bg-chat-user text-chat-user-foreground rounded-tl-md"
+                            ? "bg-chat-user text-chat-user-foreground rounded-tl-md"
+                            : "bg-chat-bot text-chat-bot-foreground rounded-tr-md"
                         )}
                       >
                         <p className="text-sm">{msg.content}</p>
                         <p className={cn(
-                          "text-xs mt-1",
-                          msg.is_from_bot ? "text-muted-foreground" : "text-primary-foreground/70"
+                          "text-xs mt-1 opacity-70"
                         )}>
                           {new Date(msg.created_at).toLocaleTimeString("ar-EG", {
                             hour: "2-digit",
@@ -166,6 +187,7 @@ export default function Inbox() {
                       </div>
                     </div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
               )}
             </ScrollArea>
@@ -176,10 +198,16 @@ export default function Inbox() {
                 <Input
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
                   placeholder="اكتب رسالتك..."
                   className="flex-1"
+                  disabled={isSending}
                 />
-                <Button size="icon">
+                <Button 
+                  size="icon" 
+                  onClick={handleSend}
+                  disabled={!messageInput.trim() || isSending}
+                >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
