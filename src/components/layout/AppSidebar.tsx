@@ -2,7 +2,6 @@ import {
   LayoutDashboard, 
   MessageSquare, 
   Users, 
-  Package, 
   Settings,
   Bot,
   X,
@@ -26,7 +25,6 @@ const navItems = [
   { to: "/inbox", icon: MessageSquare, label: "صندوق الوارد" },
   { to: "/leads", icon: Users, label: "تصنيف العملاء" },
   { to: "/orders", icon: ShoppingCart, label: "إدارة الطلبات" },
-  { to: "/products", icon: Package, label: "قاعدة المعرفة" },
   { to: "/settings", icon: Settings, label: "إعدادات البوت" },
 ];
 
@@ -68,7 +66,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
                 <Bot className="w-6 h-6 text-sidebar-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-bold text-lg">واتساب بوت</h1>
+                <h1 className="font-bold text-lg">Pixel Media</h1>
                 <p className="text-xs text-sidebar-foreground/70">لوحة التحكم</p>
               </div>
             </div>

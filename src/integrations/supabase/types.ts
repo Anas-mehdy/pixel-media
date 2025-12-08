@@ -301,6 +301,13 @@ export type Database = {
     }
     Functions: {
       get_my_client_id: { Args: never; Returns: string }
+      get_weekly_stats: {
+        Args: never
+        Returns: {
+          count: number
+          date: string
+        }[]
+      }
       hybrid_search: {
         Args: {
           full_text_weight?: number
