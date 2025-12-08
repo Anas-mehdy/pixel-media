@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { User, Send, MessageSquare, ArrowRight } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { User, MessageSquare, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,10 +17,7 @@ export default function Inbox() {
     setSelectedContact,
     isLoadingContacts,
     isLoadingMessages,
-    sendMessage,
-    isSending,
   } = useInbox();
-  const [messageInput, setMessageInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedContactInfo = contacts.find(c => c.phone === selectedContact);
@@ -30,19 +26,6 @@ export default function Inbox() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  const handleSend = () => {
-    if (!messageInput.trim() || isSending) return;
-    sendMessage(messageInput);
-    setMessageInput("");
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-4">
@@ -192,25 +175,9 @@ export default function Inbox() {
               )}
             </ScrollArea>
 
-            {/* Input */}
-            <div className="p-4 border-t border-border">
-              <div className="flex gap-2">
-                <Input
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder="اكتب رسالتك..."
-                  className="flex-1"
-                  disabled={isSending}
-                />
-                <Button 
-                  size="icon" 
-                  onClick={handleSend}
-                  disabled={!messageInput.trim() || isSending}
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
+            {/* Read-Only Mode Indicator */}
+            <div className="p-3 border-t border-border bg-muted/50 text-center">
+              <p className="text-sm text-muted-foreground">وضع المراقبة - للقراءة فقط</p>
             </div>
           </>
         )}

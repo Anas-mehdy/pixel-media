@@ -112,6 +112,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          ai_summary: string | null
           client_id: string | null
           created_at: string
           id: string
@@ -122,6 +123,7 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          ai_summary?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
@@ -132,6 +134,7 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          ai_summary?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
