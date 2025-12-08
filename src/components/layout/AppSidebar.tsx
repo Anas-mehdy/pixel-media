@@ -5,10 +5,15 @@ import {
   Package, 
   Settings,
   Bot,
-  X
+  X,
+  LogOut,
+  Loader2
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface AppSidebarProps {
   isOpen: boolean;
@@ -25,6 +30,16 @@ const navItems = [
 
 export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuthContext();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    await signOut();
+    setIsSigningOut(false);
+    navigate("/login", { replace: true });
+  };
 
   return (
     <>
@@ -86,13 +101,32 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
             })}
           </nav>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-sidebar-border">
-            <div className="bg-sidebar-accent/50 rounded-xl p-4 text-center">
-              <p className="text-sm text-sidebar-foreground/80">
-                مدعوم بالذكاء الاصطناعي
-              </p>
-            </div>
+          {/* Footer with User Info */}
+          <div className="p-4 border-t border-sidebar-border space-y-3">
+            {/* User Email */}
+            {user && (
+              <div className="bg-sidebar-accent/50 rounded-xl p-3">
+                <p className="text-xs text-sidebar-foreground/60 mb-1">مسجل الدخول كـ</p>
+                <p className="text-sm font-medium truncate" dir="ltr">
+                  {user.email}
+                </p>
+              </div>
+            )}
+            
+            {/* Logout Button */}
+            <Button
+              variant="outline"
+              className="w-full justify-center gap-2 border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              تسجيل الخروج
+            </Button>
           </div>
         </div>
       </aside>
