@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -22,6 +24,14 @@ interface Contact {
 export function useInbox() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { clientId } = useAuth();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize notification sound
+  useEffect(() => {
+    audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
+    audioRef.current.volume = 0.3;
+  }, []);
 
   const contactsQuery = useQuery({
     queryKey: ["inbox-contacts"],
@@ -67,6 +77,39 @@ export function useInbox() {
     enabled: !!selectedContact,
   });
 
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ content, contactPhone, contactName }: { 
+      content: string; 
+      contactPhone: string;
+      contactName: string | null;
+    }) => {
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          content,
+          contact_phone: contactPhone,
+          contact_name: contactName,
+          is_from_bot: true,
+          message_type: "text",
+          client_id: clientId,
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inbox-messages", selectedContact] });
+      queryClient.invalidateQueries({ queryKey: ["inbox-contacts"] });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل إرسال الرسالة",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Real-time subscription
   useEffect(() => {
     const channel = supabase
@@ -74,7 +117,13 @@ export function useInbox() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
-        () => {
+        (payload) => {
+          // Play notification sound for incoming customer messages
+          const newMessage = payload.new as Message;
+          if (!newMessage.is_from_bot && audioRef.current) {
+            audioRef.current.play().catch(() => {});
+          }
+          
           queryClient.invalidateQueries({ queryKey: ["inbox-contacts"] });
           queryClient.invalidateQueries({ queryKey: ["inbox-messages", selectedContact] });
         }
@@ -86,6 +135,17 @@ export function useInbox() {
     };
   }, [queryClient, selectedContact]);
 
+  const sendMessage = (content: string) => {
+    if (!selectedContact || !content.trim()) return;
+    
+    const contactInfo = contactsQuery.data?.find(c => c.phone === selectedContact);
+    sendMessageMutation.mutate({
+      content: content.trim(),
+      contactPhone: selectedContact,
+      contactName: contactInfo?.name || null,
+    });
+  };
+
   return {
     contacts: contactsQuery.data || [],
     messages: messagesQuery.data || [],
@@ -93,5 +153,7 @@ export function useInbox() {
     setSelectedContact,
     isLoadingContacts: contactsQuery.isLoading,
     isLoadingMessages: messagesQuery.isLoading,
+    sendMessage,
+    isSending: sendMessageMutation.isPending,
   };
 }
