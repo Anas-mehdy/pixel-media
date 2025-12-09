@@ -1,5 +1,6 @@
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationCenter } from "./NotificationCenter";
 
 interface AppHeaderProps {
   onMenuClick: () => void;
@@ -23,10 +24,7 @@ export function AppHeader({ onMenuClick, title }: AppHeaderProps) {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-          </Button>
+          <NotificationCenter />
         </div>
       </div>
     </header>
