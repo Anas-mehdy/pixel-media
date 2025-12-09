@@ -42,6 +42,32 @@ const ORDER_STATUSES = [
   { value: "Cancelled", label: "ملغي", color: "bg-red-500" },
 ];
 
+const CURRENCIES = [
+  { value: "SAR", label: "ريال سعودي (SAR)" },
+  { value: "AED", label: "درهم إماراتي (AED)" },
+  { value: "KWD", label: "دينار كويتي (KWD)" },
+  { value: "BHD", label: "دينار بحريني (BHD)" },
+  { value: "OMR", label: "ريال عماني (OMR)" },
+  { value: "QAR", label: "ريال قطري (QAR)" },
+  { value: "EGP", label: "جنيه مصري (EGP)" },
+  { value: "JOD", label: "دينار أردني (JOD)" },
+  { value: "LBP", label: "ليرة لبنانية (LBP)" },
+  { value: "SYP", label: "ليرة سورية (SYP)" },
+  { value: "IQD", label: "دينار عراقي (IQD)" },
+  { value: "YER", label: "ريال يمني (YER)" },
+  { value: "LYD", label: "دينار ليبي (LYD)" },
+  { value: "TND", label: "دينار تونسي (TND)" },
+  { value: "DZD", label: "دينار جزائري (DZD)" },
+  { value: "MAD", label: "درهم مغربي (MAD)" },
+  { value: "SDG", label: "جنيه سوداني (SDG)" },
+  { value: "MRU", label: "أوقية موريتانية (MRU)" },
+  { value: "SOS", label: "شلن صومالي (SOS)" },
+  { value: "DJF", label: "فرنك جيبوتي (DJF)" },
+  { value: "KMF", label: "فرنك قمري (KMF)" },
+  { value: "USD", label: "دولار أمريكي (USD)" },
+  { value: "EUR", label: "يورو (EUR)" },
+];
+
 export default function Orders() {
   const { orders, isLoading, updateOrderStatus, createOrder, deleteOrder } = useOrders();
   const { leads } = useLeads();
@@ -52,6 +78,7 @@ export default function Orders() {
     customer_phone: "",
     product_details: "",
     total_amount: "",
+    currency: "SAR",
   });
 
   const filteredOrders = orders.filter((order) => {
@@ -96,10 +123,11 @@ export default function Orders() {
         customer_phone: newOrder.customer_phone,
         product_details: newOrder.product_details,
         total_amount: parseFloat(newOrder.total_amount) || 0,
+        currency: newOrder.currency,
       });
       toast.success("تم إنشاء الطلب بنجاح");
       setIsDialogOpen(false);
-      setNewOrder({ customer_phone: "", product_details: "", total_amount: "" });
+      setNewOrder({ customer_phone: "", product_details: "", total_amount: "", currency: "SAR" });
     } catch (error) {
       toast.error("فشل في إنشاء الطلب");
     }
@@ -193,16 +221,38 @@ export default function Orders() {
                   placeholder="أدخل تفاصيل المنتج أو الخدمة"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>المبلغ الإجمالي</Label>
-                <Input
-                  type="number"
-                  value={newOrder.total_amount}
-                  onChange={(e) =>
-                    setNewOrder({ ...newOrder, total_amount: e.target.value })
-                  }
-                  placeholder="0.00"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>المبلغ الإجمالي</Label>
+                  <Input
+                    type="number"
+                    value={newOrder.total_amount}
+                    onChange={(e) =>
+                      setNewOrder({ ...newOrder, total_amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>العملة</Label>
+                  <Select
+                    value={newOrder.currency}
+                    onValueChange={(value) =>
+                      setNewOrder({ ...newOrder, currency: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر العملة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem key={currency.value} value={currency.value}>
+                          {currency.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Button onClick={handleCreateOrder} className="w-full">
                 إنشاء الطلب
@@ -251,7 +301,9 @@ export default function Orders() {
                     {order.product_details || "-"}
                   </TableCell>
                   <TableCell>
-                    {order.total_amount ? `${order.total_amount} ر.س` : "-"}
+                    {order.total_amount 
+                      ? `${order.total_amount} ${CURRENCIES.find(c => c.value === order.currency)?.value || order.currency || 'SAR'}` 
+                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Select

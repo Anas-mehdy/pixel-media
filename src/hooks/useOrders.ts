@@ -9,6 +9,7 @@ export interface Order {
   customer_phone: string | null;
   product_details: string | null;
   total_amount: number | null;
+  currency: string | null;
   status: string | null;
   created_at: string | null;
   last_updated: string | null;
@@ -79,6 +80,7 @@ export function useOrders() {
       customer_phone: string;
       product_details: string;
       total_amount: number;
+      currency: string;
     }) => {
       const { error } = await supabase.from("orders").insert({
         ...order,
