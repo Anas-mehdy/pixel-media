@@ -17,18 +17,20 @@ export function AppLayout() {
   const title = pageTitles[location.pathname] || "لوحة التحكم";
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="min-h-screen flex w-full bg-background" dir="rtl">
+      {/* Sidebar */}
       <AppSidebar 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
       />
       
-      <div className="flex-1 flex flex-col min-h-screen lg:mr-0">
+      {/* Main content area - takes remaining space */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0">
         <AppHeader 
           onMenuClick={() => setSidebarOpen(true)} 
           title={title}
         />
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

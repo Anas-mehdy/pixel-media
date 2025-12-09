@@ -49,15 +49,20 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Desktop: static, Mobile: fixed slide-in from right */}
       <aside
         className={cn(
-          "fixed top-0 right-0 z-50 h-full w-64 bg-sidebar text-sidebar-foreground transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static",
+          "bg-sidebar text-sidebar-foreground transition-transform duration-300 ease-in-out",
+          // Desktop: static sidebar that takes space in layout
+          "lg:static lg:translate-x-0 lg:w-64 lg:shrink-0",
+          // Mobile: fixed overlay sidebar
+          "fixed top-0 right-0 z-50 h-full w-64",
           isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
         )}
       >
