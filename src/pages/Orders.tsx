@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useOrders } from "@/hooks/useOrders";
 import { useLeads } from "@/hooks/useLeads";
 import {
@@ -69,6 +70,9 @@ const CURRENCIES = [
 ];
 
 export default function Orders() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const phoneFilter = searchParams.get("phone");
+  
   const { orders, isLoading, updateOrderStatus, createOrder, deleteOrder } = useOrders();
   const { leads } = useLeads();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -80,6 +84,18 @@ export default function Orders() {
     total_amount: "",
     currency: "SAR",
   });
+
+  // Set initial search query from URL phone filter
+  useEffect(() => {
+    if (phoneFilter) {
+      setSearchQuery(phoneFilter);
+    }
+  }, [phoneFilter]);
+
+  const clearPhoneFilter = () => {
+    setSearchParams({});
+    setSearchQuery("");
+  };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -154,7 +170,15 @@ export default function Orders() {
   return (
     <div className="space-y-6 p-6" dir="rtl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-foreground">إدارة الطلبات</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground">إدارة الطلبات</h1>
+          {phoneFilter && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <span>تصفية: {phoneFilter}</span>
+              <button onClick={clearPhoneFilter} className="mr-1 hover:text-destructive">×</button>
+            </Badge>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
