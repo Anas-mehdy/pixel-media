@@ -11,6 +11,7 @@ import Inbox from "@/pages/Inbox";
 import Leads from "@/pages/Leads";
 import Orders from "@/pages/Orders";
 import Settings from "@/pages/Settings";
+import BotBrain from "@/pages/BotBrain";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
                 <Route path="/inbox" element={<Inbox />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/bot-brain" element={<BotBrain />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
             </Route>
