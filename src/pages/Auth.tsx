@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -17,7 +16,7 @@ const authSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuthContext();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,36 +66,6 @@ export default function Auth() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
-    const { error } = await signUp(email, password);
-    setIsLoading(false);
-
-    if (error) {
-      if (error.message.includes("already registered")) {
-        toast({
-          title: "البريد مسجل مسبقاً",
-          description: "يمكنك تسجيل الدخول بهذا البريد الإلكتروني",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "خطأ في التسجيل",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "تم التسجيل بنجاح",
-        description: "تم إرسال رابط التفعيل إلى بريدك الإلكتروني",
-      });
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -121,118 +90,56 @@ export default function Auth() {
         </CardHeader>
         
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">تسجيل الدخول</TabsTrigger>
-              <TabsTrigger value="register">حساب جديد</TabsTrigger>
-            </TabsList>
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="login-email">البريد الإلكتروني</Label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="login-email"
+                  type="email"
+                  placeholder="example@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pr-10"
+                  dir="ltr"
+                />
+              </div>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
+            </div>
             
-            <TabsContent value="login">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">البريد الإلكتروني</Label>
-                  <div className="relative">
-                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="example@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pr-10"
-                      dir="ltr"
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">كلمة المرور</Label>
-                  <div className="relative">
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
-                      dir="ltr"
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password}</p>
-                  )}
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                      جارٍ تسجيل الدخول...
-                    </>
-                  ) : (
-                    "تسجيل الدخول"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
+            <div className="space-y-2">
+              <Label htmlFor="login-password">كلمة المرور</Label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="login-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                  dir="ltr"
+                />
+              </div>
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password}</p>
+              )}
+            </div>
             
-            <TabsContent value="register">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">البريد الإلكتروني</Label>
-                  <div className="relative">
-                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="register-email"
-                      type="email"
-                      placeholder="example@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pr-10"
-                      dir="ltr"
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">كلمة المرور</Label>
-                  <div className="relative">
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="register-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
-                      dir="ltr"
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="text-sm text-destructive">{errors.password}</p>
-                  )}
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                      جارٍ إنشاء الحساب...
-                    </>
-                  ) : (
-                    "إنشاء حساب"
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                  جارٍ تسجيل الدخول...
+                </>
+              ) : (
+                "تسجيل الدخول"
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
