@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Edit2, Phone, Filter, ShoppingBag, Crown } from "lucide-react";
+import { Users, Edit2, Phone, Filter, ShoppingBag, Crown, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,13 @@ export default function Leads() {
   const [editForm, setEditForm] = useState({ status: "", notes: "", name: "" });
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  const summaryStats = useMemo(() => {
+    const totalCustomers = customers.length;
+    const vipCount = customers.filter(c => (c.total_orders || 0) >= 3).length;
+    const totalRevenue = customers.reduce((sum, c) => sum + (c.total_spent || 0), 0);
+    return { totalCustomers, vipCount, totalRevenue };
+  }, [customers]);
+
   const filteredCustomers = customers.filter((customer) => {
     return statusFilter === "all" || customer.lead_status === statusFilter;
   });
@@ -117,7 +125,40 @@ export default function Leads() {
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">إجمالي العملاء</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summaryStats.totalCustomers}</div>
+            <p className="text-xs text-muted-foreground">عميل مسجل</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">عملاء VIP</CardTitle>
+            <Crown className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{summaryStats.vipCount}</div>
+            <p className="text-xs text-muted-foreground">3+ طلبات</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">إجمالي الإيرادات</CardTitle>
+            <DollarSign className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{formatCurrency(summaryStats.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground">من جميع العملاء</p>
+          </CardContent>
+        </Card>
+      </div>
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -287,6 +328,6 @@ export default function Leads() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
