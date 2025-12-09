@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useOrders } from "@/hooks/useOrders";
+import { useOrders, Order } from "@/hooks/useOrders";
 import { useLeads } from "@/hooks/useLeads";
 import {
   Table,
@@ -33,7 +33,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ar } from "date-fns/locale";
 
 const ORDER_STATUSES = [
   { value: "Pending", label: "قيد الانتظار", color: "bg-gray-500" },
@@ -78,6 +77,8 @@ export default function Orders() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
+  const previousOrdersRef = useRef<Order[]>([]);
   const [newOrder, setNewOrder] = useState({
     customer_phone: "",
     product_details: "",
@@ -91,6 +92,21 @@ export default function Orders() {
       setSearchQuery(phoneFilter);
     }
   }, [phoneFilter]);
+
+  // Detect new orders for animation
+  useEffect(() => {
+    if (previousOrdersRef.current.length > 0 && orders.length > previousOrdersRef.current.length) {
+      const previousIds = new Set(previousOrdersRef.current.map(o => o.id));
+      const newIds = orders.filter(o => !previousIds.has(o.id)).map(o => o.id);
+      if (newIds.length > 0) {
+        setNewOrderIds(new Set(newIds));
+        toast.success(`طلب جديد! 🎉`);
+        // Remove highlight after animation
+        setTimeout(() => setNewOrderIds(new Set()), 3000);
+      }
+    }
+    previousOrdersRef.current = orders;
+  }, [orders]);
 
   const clearPhoneFilter = () => {
     setSearchParams({});
@@ -294,39 +310,59 @@ export default function Orders() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border bg-card">
+        <div className="rounded-lg border bg-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-right">رقم الطلب</TableHead>
+                <TableHead className="text-right">التاريخ</TableHead>
                 <TableHead className="text-right">العميل</TableHead>
+                <TableHead className="text-right">العنوان</TableHead>
                 <TableHead className="text-right">التفاصيل</TableHead>
                 <TableHead className="text-right">المبلغ</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
-                <TableHead className="text-right">التاريخ</TableHead>
                 <TableHead className="text-right">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-sm">
-                    {order.id.slice(0, 8)}
+                <TableRow 
+                  key={order.id}
+                  className={`transition-all duration-500 ${
+                    newOrderIds.has(order.id) 
+                      ? "animate-pulse bg-primary/20 ring-2 ring-primary/50" 
+                      : ""
+                  }`}
+                >
+                  <TableCell className="font-mono text-sm font-medium">
+                    #{order.id.slice(0, 8)}
+                  </TableCell>
+                  <TableCell className="text-sm whitespace-nowrap">
+                    {order.created_at
+                      ? format(new Date(order.created_at), "dd/MM/yyyy - HH:mm")
+                      : "-"}
                   </TableCell>
                   <TableCell>
                     <div>
                       <p className="font-medium">{order.customer_name || "غير معروف"}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {order.customer_phone}
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {order.product_details || "-"}
+                  <TableCell className="max-w-[200px]">
+                    <p className="text-sm whitespace-normal break-words">
+                      {order.address || "-"}
+                    </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="max-w-[200px]">
+                    <p className="text-sm whitespace-normal break-words">
+                      {order.product_details || "-"}
+                    </p>
+                  </TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">
                     {order.total_amount 
-                      ? `${order.total_amount} ${CURRENCIES.find(c => c.value === order.currency)?.value || order.currency || 'SAR'}` 
+                      ? `${order.total_amount.toLocaleString()} ${order.currency || 'SAR'}` 
                       : "-"}
                   </TableCell>
                   <TableCell>
@@ -347,13 +383,6 @@ export default function Orders() {
                         ))}
                       </SelectContent>
                     </Select>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {order.created_at
-                      ? format(new Date(order.created_at), "dd MMM yyyy", {
-                          locale: ar,
-                        })
-                      : "-"}
                   </TableCell>
                   <TableCell>
                     <Button
