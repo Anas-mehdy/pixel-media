@@ -52,7 +52,10 @@ export type Database = {
           business_hours_start: string | null
           client_id: string | null
           hunter_active: boolean | null
+          hunter_days: string[] | null
+          hunter_end_time: string | null
           hunter_message: string | null
+          hunter_start_time: string | null
           id: string
           user_id: string
         }
@@ -63,7 +66,10 @@ export type Database = {
           business_hours_start?: string | null
           client_id?: string | null
           hunter_active?: boolean | null
+          hunter_days?: string[] | null
+          hunter_end_time?: string | null
           hunter_message?: string | null
+          hunter_start_time?: string | null
           id?: string
           user_id: string
         }
@@ -74,9 +80,39 @@ export type Database = {
           business_hours_start?: string | null
           client_id?: string | null
           hunter_active?: boolean | null
+          hunter_days?: string[] | null
+          hunter_end_time?: string | null
           hunter_message?: string | null
+          hunter_start_time?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      campaign_history: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          message_text: string
+          phones: string[]
+          recipient_count: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          message_text: string
+          phones?: string[]
+          recipient_count?: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          message_text?: string
+          phones?: string[]
+          recipient_count?: number
         }
         Relationships: []
       }
