@@ -14,6 +14,7 @@ export interface Order {
   created_at: string | null;
   last_updated: string | null;
   client_id: string | null;
+  address: string | null;
 }
 
 export function useOrders() {

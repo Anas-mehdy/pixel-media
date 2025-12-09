@@ -274,6 +274,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          address: string | null
           client_id: string | null
           created_at: string | null
           currency: string | null
@@ -286,6 +287,7 @@ export type Database = {
           total_amount: number | null
         }
         Insert: {
+          address?: string | null
           client_id?: string | null
           created_at?: string | null
           currency?: string | null
@@ -298,6 +300,7 @@ export type Database = {
           total_amount?: number | null
         }
         Update: {
+          address?: string | null
           client_id?: string | null
           created_at?: string | null
           currency?: string | null
