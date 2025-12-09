@@ -11,6 +11,7 @@ import {
   History,
   Calendar
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -183,19 +184,16 @@ export default function MarketingHub() {
     try {
       const phonesArray = Array.from(selectedPhones);
       
-      const response = await fetch("https://n8n.picelmedia.online/webhook-test/send-campaign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      // Call authenticated edge function instead of direct webhook
+      const { data, error } = await supabase.functions.invoke('send-campaign', {
+        body: {
           phones: phonesArray,
           message: campaignMessage.trim(),
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send campaign");
+      if (error) {
+        throw new Error(error.message || "Failed to send campaign");
       }
 
       // Save to campaign history
