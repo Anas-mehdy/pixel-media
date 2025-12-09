@@ -12,6 +12,7 @@ import Leads from "@/pages/Leads";
 import Orders from "@/pages/Orders";
 import Settings from "@/pages/Settings";
 import BotBrain from "@/pages/BotBrain";
+import MarketingHub from "@/pages/MarketingHub";
 import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/bot-brain" element={<BotBrain />} />
+                <Route path="/marketing" element={<MarketingHub />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
             </Route>

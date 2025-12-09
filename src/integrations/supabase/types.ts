@@ -51,6 +51,8 @@ export type Database = {
           business_hours_end: string | null
           business_hours_start: string | null
           client_id: string | null
+          hunter_active: boolean | null
+          hunter_message: string | null
           id: string
           user_id: string
         }
@@ -60,6 +62,8 @@ export type Database = {
           business_hours_end?: string | null
           business_hours_start?: string | null
           client_id?: string | null
+          hunter_active?: boolean | null
+          hunter_message?: string | null
           id?: string
           user_id: string
         }
@@ -69,6 +73,8 @@ export type Database = {
           business_hours_end?: string | null
           business_hours_start?: string | null
           client_id?: string | null
+          hunter_active?: boolean | null
+          hunter_message?: string | null
           id?: string
           user_id?: string
         }
@@ -147,6 +153,7 @@ export type Database = {
           created_at: string
           id: string
           last_contact_at: string | null
+          last_marketing_at: string | null
           name: string | null
           notes: string | null
           phone: string
@@ -158,6 +165,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_contact_at?: string | null
+          last_marketing_at?: string | null
           name?: string | null
           notes?: string | null
           phone: string
@@ -169,6 +177,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_contact_at?: string | null
+          last_marketing_at?: string | null
           name?: string | null
           notes?: string | null
           phone?: string
