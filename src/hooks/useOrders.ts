@@ -82,6 +82,7 @@ export function useOrders() {
       product_details: string;
       total_amount: number;
       currency: string;
+      address?: string;
     }) => {
       const { error } = await supabase.from("orders").insert({
         ...order,
