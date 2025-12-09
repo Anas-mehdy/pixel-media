@@ -269,6 +269,13 @@ export type Database = {
             foreignKeyName: "orders_customer_phone_fkey"
             columns: ["customer_phone"]
             isOneToOne: false
+            referencedRelation: "customer_360"
+            referencedColumns: ["phone"]
+          },
+          {
+            foreignKeyName: "orders_customer_phone_fkey"
+            columns: ["customer_phone"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["phone"]
           },
@@ -330,7 +337,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      customer_360: {
+        Row: {
+          client_id: string | null
+          id: string | null
+          last_contact_at: string | null
+          last_order_date: string | null
+          lead_status: string | null
+          name: string | null
+          phone: string | null
+          total_orders: number | null
+          total_spent: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_client_orders: { Args: { search_phone: string }; Returns: Json }

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Users, Edit2, Phone, Filter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Users, Edit2, Phone, Filter, ShoppingBag, Crown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useLeads, Lead } from "@/hooks/useLeads";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCustomer360, Customer360 } from "@/hooks/useCustomer360";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -22,28 +25,66 @@ const statusOptions = [
   { value: "closed", label: "مكتمل", color: "bg-green-500" },
 ];
 
+const getVIPBadge = (totalOrders: number | null) => {
+  if (!totalOrders || totalOrders === 0) return null;
+  
+  if (totalOrders >= 3) {
+    return (
+      <Badge className="bg-amber-500 text-white hover:bg-amber-600 mr-2">
+        <Crown className="w-3 h-3 ml-1" />
+        VIP
+      </Badge>
+    );
+  }
+  
+  if (totalOrders >= 1) {
+    return (
+      <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 mr-2">
+        عميل جديد
+      </Badge>
+    );
+  }
+  
+  return null;
+};
+
+const formatCurrency = (amount: number | null) => {
+  if (amount === null || amount === undefined) return "0.00 ر.س";
+  return `${amount.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ر.س`;
+};
+
 export default function Leads() {
-  const { leads, isLoading, updateLead, isUpdating } = useLeads();
-  const [editingLead, setEditingLead] = useState<Lead | null>(null);
-  const [editForm, setEditForm] = useState({ status: "", notes: "" });
+  const navigate = useNavigate();
+  const { customers, isLoading, updateCustomer, isUpdating } = useCustomer360();
+  const [editingCustomer, setEditingCustomer] = useState<Customer360 | null>(null);
+  const [editForm, setEditForm] = useState({ status: "", notes: "", name: "" });
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const filteredLeads = leads.filter((lead) => {
-    return statusFilter === "all" || lead.status === statusFilter;
+  const filteredCustomers = customers.filter((customer) => {
+    return statusFilter === "all" || customer.lead_status === statusFilter;
   });
 
-  const handleEdit = (lead: Lead) => {
-    setEditingLead(lead);
-    setEditForm({ status: lead.status || "new", notes: lead.notes || "" });
+  const handleEdit = (customer: Customer360) => {
+    setEditingCustomer(customer);
+    setEditForm({ 
+      status: customer.lead_status || "new", 
+      notes: "", 
+      name: customer.name || "" 
+    });
   };
 
   const handleSave = () => {
-    if (!editingLead) return;
-    updateLead({ 
-      id: editingLead.id, 
-      updates: { status: editForm.status, notes: editForm.notes } 
+    if (!editingCustomer || !editingCustomer.id) return;
+    updateCustomer({ 
+      id: editingCustomer.id, 
+      updates: { status: editForm.status, name: editForm.name } 
     });
-    setEditingLead(null);
+    setEditingCustomer(null);
+  };
+
+  const handleViewOrders = (phone: string | null) => {
+    if (!phone) return;
+    navigate(`/orders?phone=${encodeURIComponent(phone)}`);
   };
 
   const getStatusBadge = (status: string | null) => {
@@ -61,7 +102,7 @@ export default function Leads() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
-            تصنيف العملاء
+            نظرة شاملة للعملاء
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -82,8 +123,8 @@ export default function Leads() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              تصنيف العملاء
-              <Badge variant="secondary" className="mr-2">{filteredLeads.length}</Badge>
+              نظرة شاملة للعملاء (Customer 360)
+              <Badge variant="secondary" className="mr-2">{filteredCustomers.length}</Badge>
             </CardTitle>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-40">
@@ -102,10 +143,10 @@ export default function Leads() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredLeads.length === 0 ? (
+          {filteredCustomers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Users className="w-12 h-12 mb-3 opacity-50" />
-              <p>{leads.length === 0 ? "لا يوجد عملاء حتى الآن" : "لا توجد نتائج مطابقة"}</p>
+              <p>{customers.length === 0 ? "لا يوجد عملاء حتى الآن" : "لا توجد نتائج مطابقة"}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -114,45 +155,81 @@ export default function Leads() {
                   <TableRow>
                     <TableHead>الاسم / الهاتف</TableHead>
                     <TableHead>الحالة</TableHead>
+                    <TableHead>عدد الطلبات</TableHead>
+                    <TableHead>إجمالي الإنفاق</TableHead>
                     <TableHead>آخر تواصل</TableHead>
-                    <TableHead>ملخص AI</TableHead>
-                    <TableHead className="w-[100px]">إجراءات</TableHead>
+                    <TableHead className="w-[120px]">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLeads.map((lead) => (
-                    <TableRow key={lead.id}>
+                  {filteredCustomers.map((customer) => (
+                    <TableRow key={customer.id || customer.phone}>
                       <TableCell>
-                        <div>
-                          <p className="font-medium">{lead.name || "غير محدد"}</p>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Phone className="w-3 h-3" />
-                            <span dir="ltr">{lead.phone}</span>
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <div className="flex items-center">
+                              <p className="font-medium">{customer.name || "غير محدد"}</p>
+                              {getVIPBadge(customer.total_orders)}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Phone className="w-3 h-3" />
+                              <span dir="ltr">{customer.phone}</span>
+                            </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(lead.status)}</TableCell>
+                      <TableCell>{getStatusBadge(customer.lead_status)}</TableCell>
                       <TableCell>
-                        {lead.last_contact_at
-                          ? formatDistanceToNow(new Date(lead.last_contact_at), {
+                        <Badge variant="outline">
+                          {customer.total_orders || 0} طلبات
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium text-primary">
+                          {formatCurrency(customer.total_spent)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {customer.last_contact_at
+                          ? formatDistanceToNow(new Date(customer.last_contact_at), {
                               addSuffix: true,
                               locale: ar,
                             })
                           : "لم يتم التواصل"}
                       </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <p className="text-sm text-muted-foreground truncate">
-                          {lead.ai_summary || "-"}
-                        </p>
-                      </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(lead)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEdit(customer)}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>تعديل</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleViewOrders(customer.phone)}
+                                  disabled={!customer.total_orders || customer.total_orders === 0}
+                                >
+                                  <ShoppingBag className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>عرض الطلبات</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -164,12 +241,20 @@ export default function Leads() {
       </Card>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingLead} onOpenChange={() => setEditingLead(null)}>
+      <Dialog open={!!editingCustomer} onOpenChange={() => setEditingCustomer(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>تعديل تصنيف العميل</DialogTitle>
+            <DialogTitle>تعديل بيانات العميل</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>الاسم</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="اسم العميل"
+              />
+            </div>
             <div className="space-y-2">
               <Label>الحالة</Label>
               <Select
@@ -191,18 +276,9 @@ export default function Leads() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>ملاحظات</Label>
-              <Textarea
-                value={editForm.notes}
-                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                placeholder="أضف ملاحظاتك هنا..."
-                rows={4}
-              />
-            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingLead(null)}>
+            <Button variant="outline" onClick={() => setEditingCustomer(null)}>
               إلغاء
             </Button>
             <Button onClick={handleSave} disabled={isUpdating}>
