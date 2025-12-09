@@ -300,6 +300,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_orders: { Args: { search_phone: string }; Returns: Json }
       get_my_client_id: { Args: never; Returns: string }
       get_weekly_stats: {
         Args: never
