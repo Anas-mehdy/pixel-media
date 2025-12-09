@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_rules: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          match_type: string | null
+          response_text: string | null
+          trigger_keyword: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          match_type?: string | null
+          response_text?: string | null
+          trigger_keyword?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          match_type?: string | null
+          response_text?: string | null
+          trigger_keyword?: string | null
+        }
+        Relationships: []
+      }
       bot_settings: {
         Row: {
           ai_personality: string | null

@@ -25,6 +25,7 @@ const navItems = [
   { to: "/inbox", icon: MessageSquare, label: "صندوق الوارد" },
   { to: "/leads", icon: Users, label: "تصنيف العملاء" },
   { to: "/orders", icon: ShoppingCart, label: "إدارة الطلبات" },
+  { to: "/bot-brain", icon: Bot, label: "عقل البوت" },
   { to: "/settings", icon: Settings, label: "إعدادات البوت" },
 ];
 
