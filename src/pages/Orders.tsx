@@ -64,6 +64,7 @@ const CURRENCIES = [
   { value: "SOS", label: "شلن صومالي (SOS)" },
   { value: "DJF", label: "فرنك جيبوتي (DJF)" },
   { value: "KMF", label: "فرنك قمري (KMF)" },
+  { value: "TRY", label: "ليرة تركية (TRY)" },
   { value: "USD", label: "دولار أمريكي (USD)" },
   { value: "EUR", label: "يورو (EUR)" },
 ];
