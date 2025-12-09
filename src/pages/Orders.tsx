@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -46,10 +46,22 @@ export default function Orders() {
   const { orders, isLoading, updateOrderStatus, createOrder, deleteOrder } = useOrders();
   const { leads } = useLeads();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [newOrder, setNewOrder] = useState({
     customer_phone: "",
     product_details: "",
     total_amount: "",
+  });
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customer_phone?.includes(searchQuery) ||
+      order.product_details?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string | null) => {
@@ -113,8 +125,32 @@ export default function Orders() {
 
   return (
     <div className="space-y-6 p-6" dir="rtl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-foreground">إدارة الطلبات</h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="بحث عن طلب..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-48 pr-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <Filter className="ml-2 h-4 w-4" />
+              <SelectValue placeholder="كل الحالات" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الحالات</SelectItem>
+              {ORDER_STATUSES.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90">
@@ -174,11 +210,14 @@ export default function Orders() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
-      {orders.length === 0 ? (
+      {filteredOrders.length === 0 ? (
         <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">لا توجد طلبات بعد</p>
+          <p className="text-muted-foreground">
+            {orders.length === 0 ? "لا توجد طلبات بعد" : "لا توجد نتائج مطابقة"}
+          </p>
         </div>
       ) : (
         <div className="rounded-lg border bg-card">
@@ -195,7 +234,7 @@ export default function Orders() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-mono text-sm">
                     {order.id.slice(0, 8)}
