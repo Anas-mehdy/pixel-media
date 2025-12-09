@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
-import { User, MessageSquare, ArrowRight } from "lucide-react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { User, MessageSquare, ArrowRight, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { useInbox } from "@/hooks/useInbox";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -19,8 +20,18 @@ export default function Inbox() {
     isLoadingMessages,
   } = useInbox();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const selectedContactInfo = contacts.find(c => c.phone === selectedContact);
+
+  const filteredContacts = useMemo(() => {
+    if (!searchQuery) return contacts;
+    return contacts.filter(
+      (contact) =>
+        contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.phone.includes(searchQuery)
+    );
+  }, [contacts, searchQuery]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -33,9 +44,18 @@ export default function Inbox() {
       <Card className={cn(
         "w-full lg:w-80 flex flex-col overflow-hidden",
         selectedContact && "hidden lg:flex"
-      )}>
-        <div className="p-4 border-b border-border">
+      )} dir="rtl">
+        <div className="p-4 border-b border-border space-y-3">
           <h2 className="font-semibold text-lg">المحادثات</h2>
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="بحث عن محادثة..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-9"
+            />
+          </div>
         </div>
         <ScrollArea className="flex-1">
           {isLoadingContacts ? (
@@ -50,14 +70,14 @@ export default function Inbox() {
                 </div>
               ))}
             </div>
-          ) : contacts.length === 0 ? (
+          ) : filteredContacts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
-              <p>لا توجد محادثات</p>
+              <p>{contacts.length === 0 ? "لا توجد محادثات" : "لا توجد نتائج مطابقة"}</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {contacts.map((contact) => (
+              {filteredContacts.map((contact) => (
                 <button
                   key={contact.phone}
                   onClick={() => setSelectedContact(contact.phone)}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Users, Edit2, Phone } from "lucide-react";
+import { useState } from "react";
+import { Users, Edit2, Phone, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +23,14 @@ const statusOptions = [
 ];
 
 export default function Leads() {
-  const { leads, isLoading, updateLead, isUpdating, refetch } = useLeads();
+  const { leads, isLoading, updateLead, isUpdating } = useLeads();
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editForm, setEditForm] = useState({ status: "", notes: "" });
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const filteredLeads = leads.filter((lead) => {
+    return statusFilter === "all" || lead.status === statusFilter;
+  });
 
   const handleEdit = (lead: Lead) => {
     setEditingLead(lead);
@@ -74,17 +79,33 @@ export default function Leads() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            تصنيف العملاء
-            <Badge variant="secondary" className="mr-2">{leads.length}</Badge>
-          </CardTitle>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              تصنيف العملاء
+              <Badge variant="secondary" className="mr-2">{filteredLeads.length}</Badge>
+            </CardTitle>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <Filter className="ml-2 h-4 w-4" />
+                <SelectValue placeholder="كل الحالات" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات</SelectItem>
+                {statusOptions.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          {leads.length === 0 ? (
+          {filteredLeads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Users className="w-12 h-12 mb-3 opacity-50" />
-              <p>لا يوجد عملاء حتى الآن</p>
+              <p>{leads.length === 0 ? "لا يوجد عملاء حتى الآن" : "لا توجد نتائج مطابقة"}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -99,7 +120,7 @@ export default function Leads() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leads.map((lead) => (
+                  {filteredLeads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell>
                         <div>
