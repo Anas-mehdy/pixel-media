@@ -12,6 +12,8 @@ export interface BotSettings {
   business_hours_start: string | null;
   business_hours_end: string | null;
   client_id: string | null;
+  hunter_active: boolean | null;
+  hunter_message: string | null;
 }
 
 export function useBotSettings() {
