@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Search, Filter } from "lucide-react";
+import { Plus, Trash2, Search, Filter, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -84,6 +84,7 @@ export default function Orders() {
     product_details: "",
     total_amount: "",
     currency: "SAR",
+    address: "",
   });
 
   // Set initial search query from URL phone filter
@@ -156,10 +157,11 @@ export default function Orders() {
         product_details: newOrder.product_details,
         total_amount: parseFloat(newOrder.total_amount) || 0,
         currency: newOrder.currency,
+        address: newOrder.address,
       });
       toast.success("تم إنشاء الطلب بنجاح");
       setIsDialogOpen(false);
-      setNewOrder({ customer_phone: "", product_details: "", total_amount: "", currency: "SAR" });
+      setNewOrder({ customer_phone: "", product_details: "", total_amount: "", currency: "SAR", address: "" });
     } catch (error) {
       toast.error("فشل في إنشاء الطلب");
     }
@@ -172,6 +174,42 @@ export default function Orders() {
     } catch (error) {
       toast.error("فشل في حذف الطلب");
     }
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["رقم الطلب", "التاريخ", "اسم العميل", "الهاتف", "العنوان", "تفاصيل المنتج", "المبلغ", "العملة", "الحالة"];
+    const statusLabels: Record<string, string> = {
+      Pending: "قيد الانتظار",
+      Processing: "جاري التجهيز",
+      Shipped: "تم الشحن",
+      Delivered: "تم التسليم",
+      Cancelled: "ملغي",
+    };
+    
+    const csvRows = [
+      headers.join(","),
+      ...filteredOrders.map(order => [
+        `#${order.id.slice(0, 8)}`,
+        order.created_at ? format(new Date(order.created_at), "dd/MM/yyyy HH:mm") : "-",
+        order.customer_name || "غير معروف",
+        order.customer_phone || "-",
+        `"${(order.address || "-").replace(/"/g, '""')}"`,
+        `"${(order.product_details || "-").replace(/"/g, '""')}"`,
+        order.total_amount || 0,
+        order.currency || "SAR",
+        statusLabels[order.status || "Pending"] || order.status,
+      ].join(","))
+    ].join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvRows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orders_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("تم تصدير الطلبات بنجاح");
   };
 
   if (isLoading) {
@@ -219,6 +257,10 @@ export default function Orders() {
               ))}
             </SelectContent>
           </Select>
+        <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="ml-2 h-4 w-4" />
+            تصدير CSV
+          </Button>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90">
@@ -250,6 +292,17 @@ export default function Orders() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>عنوان التوصيل</Label>
+                <Textarea
+                  value={newOrder.address}
+                  onChange={(e) =>
+                    setNewOrder({ ...newOrder, address: e.target.value })
+                  }
+                  placeholder="أدخل عنوان التوصيل كاملاً"
+                  rows={2}
+                />
               </div>
               <div className="space-y-2">
                 <Label>تفاصيل المنتج</Label>
