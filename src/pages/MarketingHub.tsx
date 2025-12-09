@@ -6,7 +6,10 @@ import {
   CheckCircle2, 
   Search,
   Target,
-  Info
+  Info,
+  Clock,
+  History,
+  Calendar
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,11 +38,22 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { useBotSettings } from "@/hooks/useBotSettings";
+import { useCampaignHistory } from "@/hooks/useCampaignHistory";
 import { useLeads } from "@/hooks/useLeads";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
 const MAX_SELECTION = 10;
+
+const DAYS_OF_WEEK = [
+  { value: "sunday", label: "الأحد" },
+  { value: "monday", label: "الإثنين" },
+  { value: "tuesday", label: "الثلاثاء" },
+  { value: "wednesday", label: "الأربعاء" },
+  { value: "thursday", label: "الخميس" },
+  { value: "friday", label: "الجمعة" },
+  { value: "saturday", label: "السبت" },
+];
 
 const statusOptions = [
   { value: "all", label: "الكل" },
@@ -67,10 +81,14 @@ const getStatusBadge = (status: string | null) => {
 export default function MarketingHub() {
   const { settings, isLoading: isLoadingSettings, updateSettings, isUpdating } = useBotSettings();
   const { leads, isLoading: isLoadingLeads } = useLeads();
+  const { history: campaignHistory, isLoading: isLoadingHistory, addCampaign } = useCampaignHistory();
   
   // Hunter settings state
   const [hunterActive, setHunterActive] = useState(false);
   const [hunterMessage, setHunterMessage] = useState("");
+  const [hunterDays, setHunterDays] = useState<string[]>([]);
+  const [hunterStartTime, setHunterStartTime] = useState("09:00");
+  const [hunterEndTime, setHunterEndTime] = useState("21:00");
   
   // Campaign state
   const [statusFilter, setStatusFilter] = useState("all");
@@ -85,6 +103,9 @@ export default function MarketingHub() {
     if (settings) {
       setHunterActive(settings.hunter_active ?? false);
       setHunterMessage(settings.hunter_message ?? "");
+      setHunterDays(settings.hunter_days ?? ["sunday", "monday", "tuesday", "wednesday", "thursday"]);
+      setHunterStartTime(settings.hunter_start_time?.substring(0, 5) ?? "09:00");
+      setHunterEndTime(settings.hunter_end_time?.substring(0, 5) ?? "21:00");
     }
   }, [settings]);
 
@@ -115,16 +136,26 @@ export default function MarketingHub() {
     if (selectedPhones.size === filteredLeads.length) {
       setSelectedPhones(new Set());
     } else {
-      // Select up to MAX_SELECTION
       const phonesToSelect = filteredLeads.slice(0, MAX_SELECTION).map(l => l.phone);
       setSelectedPhones(new Set(phonesToSelect));
     }
+  };
+
+  const handleToggleDay = (day: string) => {
+    setHunterDays(prev => 
+      prev.includes(day) 
+        ? prev.filter(d => d !== day)
+        : [...prev, day]
+    );
   };
 
   const handleSaveHunterSettings = () => {
     updateSettings({
       hunter_active: hunterActive,
       hunter_message: hunterMessage,
+      hunter_days: hunterDays,
+      hunter_start_time: hunterStartTime,
+      hunter_end_time: hunterEndTime,
     });
   };
 
@@ -133,6 +164,9 @@ export default function MarketingHub() {
     updateSettings({
       hunter_active: active,
       hunter_message: hunterMessage,
+      hunter_days: hunterDays,
+      hunter_start_time: hunterStartTime,
+      hunter_end_time: hunterEndTime,
     });
     toast({
       title: active ? "صائد المبيعات نشط 🎯" : "صائد المبيعات متوقف",
@@ -147,13 +181,15 @@ export default function MarketingHub() {
     
     setIsSendingCampaign(true);
     try {
+      const phonesArray = Array.from(selectedPhones);
+      
       const response = await fetch("https://n8n.picelmedia.online/webhook-test/send-campaign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phones: Array.from(selectedPhones),
+          phones: phonesArray,
           message: campaignMessage.trim(),
         }),
       });
@@ -161,6 +197,12 @@ export default function MarketingHub() {
       if (!response.ok) {
         throw new Error("Failed to send campaign");
       }
+
+      // Save to campaign history
+      await addCampaign({
+        phones: phonesArray,
+        message_text: campaignMessage.trim(),
+      });
 
       toast({
         title: "تم إرسال الحملة بنجاح! ✅",
@@ -221,6 +263,65 @@ export default function MarketingHub() {
             </p>
           </div>
 
+          {/* Scheduling Section */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-medium">جدولة صائد المبيعات</Label>
+            </div>
+
+            {/* Days Selection */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">أيام العمل</Label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS_OF_WEEK.map((day) => (
+                  <Button
+                    key={day.value}
+                    type="button"
+                    variant={hunterDays.includes(day.value) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleDay(day.value)}
+                    className="text-xs"
+                  >
+                    {day.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="hunter-start" className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  من الساعة
+                </Label>
+                <Input
+                  id="hunter-start"
+                  type="time"
+                  value={hunterStartTime}
+                  onChange={(e) => setHunterStartTime(e.target.value)}
+                  className="text-center"
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hunter-end" className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  إلى الساعة
+                </Label>
+                <Input
+                  id="hunter-end"
+                  type="time"
+                  value={hunterEndTime}
+                  onChange={(e) => setHunterEndTime(e.target.value)}
+                  className="text-center"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="hunter-message">قالب الرسالة</Label>
             <Textarea
@@ -239,6 +340,65 @@ export default function MarketingHub() {
           >
             {isUpdating ? "جاري الحفظ..." : "حفظ الإعدادات"}
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Campaign History */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <History className="h-6 w-6 text-primary" />
+            <div>
+              <CardTitle>📜 سجل الحملات</CardTitle>
+              <CardDescription className="mt-1">
+                عرض الحملات التسويقية السابقة
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoadingHistory ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : campaignHistory.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              لا توجد حملات سابقة
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>التاريخ</TableHead>
+                    <TableHead>عدد المستلمين</TableHead>
+                    <TableHead>معاينة الرسالة</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaignHistory.map((campaign) => (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(campaign.created_at), "d MMM yyyy - HH:mm", { locale: ar })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {campaign.recipient_count} عميل
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <p className="truncate text-sm text-muted-foreground" title={campaign.message_text}>
+                          {campaign.message_text}
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

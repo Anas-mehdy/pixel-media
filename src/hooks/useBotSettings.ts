@@ -14,6 +14,9 @@ export interface BotSettings {
   client_id: string | null;
   hunter_active: boolean | null;
   hunter_message: string | null;
+  hunter_days: string[] | null;
+  hunter_start_time: string | null;
+  hunter_end_time: string | null;
 }
 
 export function useBotSettings() {
