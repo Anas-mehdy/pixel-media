@@ -29,7 +29,8 @@ export function useCustomer360() {
       if (error) throw error;
       return (data || []) as Customer360[];
     },
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   // Real-time subscription for leads updates (which affects the view)
@@ -43,8 +44,11 @@ export function useCustomer360() {
           schema: "public",
           table: "leads",
         },
-        () => {
+        (payload) => {
+          console.log("Leads table changed:", payload);
+          // Force immediate refetch
           queryClient.invalidateQueries({ queryKey: ["customer-360"] });
+          customersQuery.refetch();
         }
       )
       .on(
@@ -56,6 +60,7 @@ export function useCustomer360() {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["customer-360"] });
+          customersQuery.refetch();
         }
       )
       .subscribe();
@@ -63,7 +68,7 @@ export function useCustomer360() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, customersQuery]);
 
   // Update mutation targets the leads table, not the view
   const updateCustomer = useMutation({
