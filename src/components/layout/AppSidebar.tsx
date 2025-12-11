@@ -1,14 +1,15 @@
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  Users, 
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Users,
   Settings,
   Bot,
   X,
   LogOut,
   Loader2,
   ShoppingCart,
-  Megaphone
+  Megaphone,
+  Package
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const navItems = [
   { to: "/inbox", icon: MessageSquare, label: "صندوق الوارد" },
   { to: "/leads", icon: Users, label: "تصنيف العملاء" },
   { to: "/orders", icon: ShoppingCart, label: "إدارة الطلبات" },
+  { to: "/products", icon: Package, label: "قاعدة المعرفة" },
   { to: "/bot-brain", icon: Bot, label: "عقل البوت" },
   { to: "/marketing", icon: Megaphone, label: "مركز التسويق" },
   { to: "/settings", icon: Settings, label: "إعدادات البوت" },

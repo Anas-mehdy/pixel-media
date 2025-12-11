@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import Inbox from "@/pages/Inbox";
 import Leads from "@/pages/Leads";
 import Orders from "@/pages/Orders";
+import Products from "@/pages/Products";
 import Settings from "@/pages/Settings";
 import BotBrain from "@/pages/BotBrain";
 import MarketingHub from "@/pages/MarketingHub";
@@ -33,6 +34,7 @@ const App = () => (
                 <Route path="/inbox" element={<Inbox />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/products" element={<Products />} />
                 <Route path="/bot-brain" element={<BotBrain />} />
                 <Route path="/marketing" element={<MarketingHub />} />
                 <Route path="/settings" element={<Settings />} />
