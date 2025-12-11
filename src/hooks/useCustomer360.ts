@@ -29,6 +29,7 @@ export function useCustomer360() {
       if (error) throw error;
       return (data || []) as Customer360[];
     },
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
   });
 
   // Real-time subscription for leads updates (which affects the view)
