@@ -316,6 +316,8 @@ export type Database = {
           id: string
           last_updated: string | null
           product_details: string | null
+          product_id: string | null
+          quantity: number | null
           status: string | null
           total_amount: number | null
         }
@@ -329,6 +331,8 @@ export type Database = {
           id?: string
           last_updated?: string | null
           product_details?: string | null
+          product_id?: string | null
+          quantity?: number | null
           status?: string | null
           total_amount?: number | null
         }
@@ -342,6 +346,8 @@ export type Database = {
           id?: string
           last_updated?: string | null
           product_details?: string | null
+          product_id?: string | null
+          quantity?: number | null
           status?: string | null
           total_amount?: number | null
         }
@@ -360,38 +366,45 @@ export type Database = {
             referencedRelation: "leads"
             referencedColumns: ["phone"]
           },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
         Row: {
-          client_id: string | null
-          created_at: string
+          bot_notes: string | null
+          created_at: string | null
           description: string | null
           id: string
           image_url: string | null
-          in_stock: boolean | null
           name: string
-          price: number | null
+          price: number
+          stock_quantity: number
         }
         Insert: {
-          client_id?: string | null
-          created_at?: string
+          bot_notes?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
-          in_stock?: boolean | null
           name: string
-          price?: number | null
+          price?: number
+          stock_quantity?: number
         }
         Update: {
-          client_id?: string | null
-          created_at?: string
+          bot_notes?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
-          in_stock?: boolean | null
           name?: string
-          price?: number | null
+          price?: number
+          stock_quantity?: number
         }
         Relationships: []
       }
