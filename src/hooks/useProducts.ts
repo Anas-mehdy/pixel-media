@@ -9,6 +9,7 @@ export interface Product {
   name: string;
   description: string | null;
   price: number | null;
+  currency: string | null;
   stock_quantity: number | null;
   bot_notes: string | null;
   image_url: string | null;
