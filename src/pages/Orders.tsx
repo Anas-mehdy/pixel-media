@@ -42,7 +42,7 @@ const ORDER_STATUSES = [
   { value: "Cancelled", label: "ملغي", color: "bg-red-500" },
 ];
 
-const CURRENCIES = [
+export const CURRENCIES = [
   { value: "SAR", label: "ريال سعودي (SAR)" },
   { value: "AED", label: "درهم إماراتي (AED)" },
   { value: "KWD", label: "دينار كويتي (KWD)" },
@@ -290,7 +290,7 @@ export default function Orders() {
                       <SelectItem key={lead.id} value={lead.phone}>
                         {lead.name || lead.phone} - {lead.phone}
                       </SelectItem>
-                    ))}
+                    ))
                   </SelectContent>
                 </Select>
               </div>
