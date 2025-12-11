@@ -16,7 +16,26 @@ export interface Product {
   client_id: string | null;
 }
 
+// نفس الشكل اللي تستعمله صفحة Products في formData
 export type ProductInput = Omit<Product, "id" | "created_at" | "client_id">;
+
+// دالة مساعدة: نضمن الحصول على client_id مهما صار
+async function resolveClientId(contextClientId: string | null): Promise<string> {
+  if (contextClientId) return contextClientId;
+
+  const { data, error } = await supabase.rpc("get_my_client_id");
+
+  if (error) {
+    console.error("Error getting client_id via RPC:", error);
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("get_my_client_id() returned null/undefined");
+  }
+
+  return data as string;
+}
 
 export function useProducts() {
   const queryClient = useQueryClient();
@@ -58,11 +77,18 @@ export function useProducts() {
 
   const addProduct = useMutation({
     mutationFn: async (product: ProductInput) => {
+      // ✅ نضمن client_id صحيح حتى لو الـ context ما كان جاهز
+      const effectiveClientId = await resolveClientId(clientId);
+
       const { error } = await supabase.from("products").insert({
         ...product,
-        client_id: clientId,
+        client_id: effectiveClientId,
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error("Error adding product:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -72,7 +98,8 @@ export function useProducts() {
         description: "تم إضافة المنتج بنجاح",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Add product failed:", error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء إضافة المنتج",
@@ -82,13 +109,22 @@ export function useProducts() {
   });
 
   const updateProduct = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<ProductInput> }) => {
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<ProductInput>;
+    }) => {
       const { error } = await supabase
         .from("products")
         .update(updates)
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating product:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -97,7 +133,8 @@ export function useProducts() {
         description: "تم تحديث المنتج بنجاح",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update product failed:", error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء تحديث المنتج",
@@ -108,8 +145,15 @@ export function useProducts() {
 
   const deleteProduct = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) throw error;
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error deleting product:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -119,7 +163,8 @@ export function useProducts() {
         description: "تم حذف المنتج بنجاح",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete product failed:", error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء حذف المنتج",
